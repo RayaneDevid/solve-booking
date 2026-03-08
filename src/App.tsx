@@ -3,6 +3,7 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import { ProtectedRoute, AdminRoute, PublicRoute } from '@/components/ProtectedRoute'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { LoginPage } from '@/pages/LoginPage'
+import { PublicCalendar } from '@/pages/PublicCalendar'
 import { UserDashboard } from '@/pages/user/UserDashboard'
 import { AdminDashboard } from '@/pages/admin/AdminDashboard'
 import { UserManagement } from '@/pages/admin/UserManagement'
@@ -12,6 +13,9 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+          {/* Vue publique calendrier */}
+          <Route path="/" element={<PublicCalendar />} />
+
           {/* Public routes */}
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<LoginPage />} />

@@ -78,6 +78,18 @@ CREATE POLICY "Admins can update profiles"
 
 -- ---- RESERVATIONS POLICIES ----
 
+-- Les visiteurs anonymes peuvent voir les réservations acceptées
+CREATE POLICY "Anon can read accepted reservations"
+  ON public.reservations FOR SELECT
+  TO anon
+  USING (status = 'accepted');
+
+-- Les visiteurs anonymes peuvent lire les profils (pour les noms)
+CREATE POLICY "Anon can read profiles"
+  ON public.profiles FOR SELECT
+  TO anon
+  USING (true);
+
 -- Les users authentifiés peuvent voir les réservations acceptées (pour le calendrier)
 CREATE POLICY "Users can read accepted reservations"
   ON public.reservations FOR SELECT
