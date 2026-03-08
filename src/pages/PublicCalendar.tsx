@@ -87,8 +87,8 @@ export function PublicCalendar() {
               <Server className="w-5 h-5 text-accent" />
             </div>
             <div>
-              <h1 className="text-sm font-bold text-white">GameServer</h1>
-              <p className="text-[10px] text-gray-500">Reservation System</p>
+              <h1 className="text-sm font-bold text-white">Solve - Réservations</h1>
+              <p className="text-[10px] text-gray-500">Consultez les réservations en cours</p>
             </div>
           </div>
           <Link
