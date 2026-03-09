@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { WeeklyCalendar } from '@/components/calendar/WeeklyCalendar'
 import { NewReservationModal } from '@/components/ui/NewReservationModal'
 import { MyReservations } from '@/components/ui/MyReservations'
+import { ReservationDetailModal } from '@/components/ui/ReservationDetailModal'
 import { getMonday, getWeekDays, formatDateISO } from '@/lib/utils'
 import type { Reservation, Profile } from '@/types/database'
 
@@ -15,6 +16,7 @@ export function UserDashboard() {
   const [myReservations, setMyReservations] = useState<Reservation[]>([])
   const [profiles, setProfiles] = useState<Record<string, Profile>>({})
   const [showModal, setShowModal] = useState(false)
+  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null)
 
   const weekDays = useMemo(() => getWeekDays(currentMonday), [currentMonday])
 
@@ -24,7 +26,6 @@ export function UserDashboard() {
     const startDate = formatDateISO(weekDays[0])
     const endDate = formatDateISO(weekDays[6])
 
-    // Charger les réservations de la semaine (acceptées pour le calendrier + les miennes)
     const { data: weekRes } = await supabase
       .from('reservations')
       .select('*')
@@ -34,7 +35,6 @@ export function UserDashboard() {
     if (weekRes) {
       setReservations(weekRes as Reservation[])
 
-      // Charger les profils des utilisateurs des réservations
       const userIds = [...new Set((weekRes as Reservation[]).map((r) => r.user_id))]
       if (userIds.length > 0) {
         const { data: profilesData } = await supabase
@@ -50,7 +50,6 @@ export function UserDashboard() {
       }
     }
 
-    // Charger toutes mes réservations
     const { data: myRes } = await supabase
       .from('reservations')
       .select('*')
@@ -66,7 +65,6 @@ export function UserDashboard() {
     fetchReservations()
   }, [fetchReservations])
 
-  // Realtime subscription
   useEffect(() => {
     const channel = supabase
       .channel('reservations-changes')
@@ -124,11 +122,15 @@ export function UserDashboard() {
           onPrevWeek={handlePrevWeek}
           onNextWeek={handleNextWeek}
           onToday={handleToday}
+          onReservationClick={setSelectedReservation}
         />
       </div>
 
       {/* My Reservations */}
-      <MyReservations reservations={myReservations} />
+      <MyReservations
+        reservations={myReservations}
+        onReservationClick={setSelectedReservation}
+      />
 
       {/* New Reservation Modal */}
       <NewReservationModal
@@ -136,6 +138,16 @@ export function UserDashboard() {
         onClose={() => setShowModal(false)}
         onCreated={fetchReservations}
       />
+
+      {/* Reservation Detail Modal */}
+      {selectedReservation && (
+        <ReservationDetailModal
+          reservation={selectedReservation}
+          profiles={profiles}
+          onClose={() => setSelectedReservation(null)}
+          onUpdated={fetchReservations}
+        />
+      )}
     </div>
   )
 }

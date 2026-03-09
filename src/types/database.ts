@@ -33,6 +33,7 @@ export type Database = {
           start_time: string
           end_time: string
           note: string | null
+          requested_map: string | null
           status: 'pending' | 'accepted' | 'refused'
           assigned_server: number | null
           server_password: string | null
@@ -48,6 +49,7 @@ export type Database = {
           start_time: string
           end_time: string
           note?: string | null
+          requested_map?: string | null
           status?: 'pending' | 'accepted' | 'refused'
           assigned_server?: number | null
           server_password?: string | null
@@ -63,6 +65,7 @@ export type Database = {
           start_time?: string
           end_time?: string
           note?: string | null
+          requested_map?: string | null
           status?: 'pending' | 'accepted' | 'refused'
           assigned_server?: number | null
           server_password?: string | null

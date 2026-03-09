@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Check, X, Clock, Server, ClipboardList } from 'lucide-react'
+import { Check, X, Clock, Server, ClipboardList, Plus, MapPin } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { WeeklyCalendar } from '@/components/calendar/WeeklyCalendar'
 import { AcceptModal, RefuseModal } from '@/components/ui/AdminModals'
+import { NewReservationModal } from '@/components/ui/NewReservationModal'
+import { ReservationDetailModal } from '@/components/ui/ReservationDetailModal'
 import { getMonday, getWeekDays, formatDateISO, timeToMinutesSince18 } from '@/lib/utils'
 import type { Reservation, Profile } from '@/types/database'
 
@@ -18,6 +20,8 @@ export function AdminDashboard() {
   // Modals
   const [acceptingRes, setAcceptingRes] = useState<Reservation | null>(null)
   const [refusingRes, setRefusingRes] = useState<Reservation | null>(null)
+  const [showNewModal, setShowNewModal] = useState(false)
+  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null)
 
   const weekDays = useMemo(() => getWeekDays(currentMonday), [currentMonday])
 
@@ -25,7 +29,6 @@ export function AdminDashboard() {
     const startDate = formatDateISO(weekDays[0])
     const endDate = formatDateISO(weekDays[6])
 
-    // Toutes les réservations de la semaine
     const { data: weekRes } = await supabase
       .from('reservations')
       .select('*')
@@ -36,7 +39,6 @@ export function AdminDashboard() {
       setReservations(weekRes as Reservation[])
     }
 
-    // Toutes les réservations pending
     const { data: allRes } = await supabase
       .from('reservations')
       .select('*')
@@ -46,7 +48,6 @@ export function AdminDashboard() {
       setAllReservations(allRes as Reservation[])
     }
 
-    // Tous les profils
     const { data: profilesData } = await supabase
       .from('profiles')
       .select('*')
@@ -62,7 +63,6 @@ export function AdminDashboard() {
     fetchData()
   }, [fetchData])
 
-  // Realtime
   useEffect(() => {
     const channel = supabase
       .channel('admin-reservations')
@@ -100,7 +100,6 @@ export function AdminDashboard() {
   const server2Count = allReservations.filter((r) => r.status === 'accepted' && r.assigned_server === 2).length
   const server3Count = allReservations.filter((r) => r.status === 'accepted' && r.assigned_server === 3).length
 
-  // Serveurs déjà réservés pour le créneau d'une réservation pending
   const getExistingServers = (res: Reservation): number[] => {
     return reservations
       .filter(
@@ -124,9 +123,18 @@ export function AdminDashboard() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
-        <p className="text-sm text-gray-400 mt-1">Gérez les réservations et les utilisateurs</p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
+          <p className="text-sm text-gray-400 mt-1">Gérez les réservations et les utilisateurs</p>
+        </div>
+        <button
+          onClick={() => setShowNewModal(true)}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-sm font-medium hover:from-blue-500 hover:to-cyan-400 transition-all"
+        >
+          <Plus className="w-4 h-4" />
+          Nouvelle Réservation
+        </button>
       </div>
 
       {/* Content grid */}
@@ -153,9 +161,14 @@ export function AdminDashboard() {
                         En attente
                       </span>
                     </div>
-                    <p className="text-xs text-gray-400 mb-3">
+                    <p className="text-xs text-gray-400 mb-1">
                       {res.date} · {res.start_time.slice(0, 5)} – {res.end_time.slice(0, 5)}
                     </p>
+                    {res.requested_map && (
+                      <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                        <MapPin className="w-3 h-3" /> {res.requested_map}
+                      </p>
+                    )}
                     {res.note && (
                       <p className="text-xs text-gray-500 mb-3 bg-dark-700/50 rounded px-2 py-1">{res.note}</p>
                     )}
@@ -212,6 +225,7 @@ export function AdminDashboard() {
             onNextWeek={handleNextWeek}
             onToday={handleToday}
             serverFilter={serverFilter}
+            onReservationClick={setSelectedReservation}
           />
         </div>
       </div>
@@ -253,6 +267,21 @@ export function AdminDashboard() {
           profiles={profiles}
           onClose={() => setRefusingRes(null)}
           onDone={fetchData}
+        />
+      )}
+
+      <NewReservationModal
+        isOpen={showNewModal}
+        onClose={() => setShowNewModal(false)}
+        onCreated={fetchData}
+      />
+
+      {selectedReservation && (
+        <ReservationDetailModal
+          reservation={selectedReservation}
+          profiles={profiles}
+          onClose={() => setSelectedReservation(null)}
+          onUpdated={fetchData}
         />
       )}
     </div>

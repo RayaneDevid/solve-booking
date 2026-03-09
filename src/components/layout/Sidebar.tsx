@@ -1,10 +1,14 @@
+import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { LayoutDashboard, Users, LogOut, Server } from 'lucide-react'
+import { LayoutDashboard, Users, LogOut, KeyRound } from 'lucide-react'
+import { ChangePasswordModal } from '@/components/ui/ChangePasswordModal'
+import logoImg from '@/assets/logo.png'
 
 export function Sidebar() {
   const { profile, signOut } = useAuth()
   const navigate = useNavigate()
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
 
   const handleSignOut = async () => {
     await signOut()
@@ -27,9 +31,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="p-4 border-b border-dark-500/50">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-accent/20 flex items-center justify-center">
-            <Server className="w-5 h-5 text-accent" />
-          </div>
+          <img src={logoImg} alt="Solve" className="w-9 h-9 rounded-lg object-cover" />
           <div>
             <h1 className="text-sm font-bold text-white">Solve - Réservations</h1>
             <p className="text-[10px] text-gray-500">Server booking system</p>
@@ -58,7 +60,7 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {/* User info + Sign out */}
+      {/* User info + Actions */}
       <div className="p-3 border-t border-dark-500/50">
         <div className="flex items-center gap-3 px-3 py-2">
           <div className="w-8 h-8 rounded-full bg-accent/30 flex items-center justify-center text-sm font-bold text-accent uppercase">
@@ -70,6 +72,13 @@ export function Sidebar() {
           </div>
         </div>
         <button
+          onClick={() => setShowPasswordModal(true)}
+          className="w-full flex items-center gap-3 px-3 py-2 mt-1 rounded-lg text-sm text-gray-400 hover:text-gray-200 hover:bg-dark-600 transition-colors"
+        >
+          <KeyRound className="w-4 h-4" />
+          Modifier le mot de passe
+        </button>
+        <button
           onClick={handleSignOut}
           className="w-full flex items-center gap-3 px-3 py-2 mt-1 rounded-lg text-sm text-gray-400 hover:text-gray-200 hover:bg-dark-600 transition-colors"
         >
@@ -77,6 +86,10 @@ export function Sidebar() {
           Se déconnecter
         </button>
       </div>
+
+      {showPasswordModal && (
+        <ChangePasswordModal onClose={() => setShowPasswordModal(false)} />
+      )}
     </aside>
   )
 }

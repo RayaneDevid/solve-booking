@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { User, Lock, Server } from 'lucide-react'
+import { User, Lock } from 'lucide-react'
+import logoImg from '@/assets/logo.png'
 
 export function LoginPage() {
   const [username, setUsername] = useState('')
@@ -31,9 +32,7 @@ export function LoginPage() {
     <div className="min-h-screen bg-dark-900 flex flex-col items-center justify-center px-4">
       {/* Logo */}
       <div className="mb-8 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-accent/20 flex items-center justify-center mx-auto mb-4">
-          <Server className="w-8 h-8 text-accent" />
-        </div>
+        <img src={logoImg} alt="Solve" className="w-16 h-16 rounded-2xl mx-auto mb-4 object-cover" />
         <h1 className="text-2xl font-bold text-white">Solve - Réservations</h1>
         <p className="text-sm text-gray-500 mt-1">Système de réservations pour les servers events.</p>
       </div>

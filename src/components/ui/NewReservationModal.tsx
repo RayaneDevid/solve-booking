@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react'
-import { X, Calendar, Clock, FileText, Info } from 'lucide-react'
+import { X, Calendar, Clock, FileText, Info, MapPin } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
-import { getEndTimeOptions, getStartTimeOptions, isWeekend } from '@/lib/utils'
+import { getEndTimeOptions, getEndTimeOptionsAdmin, getStartTimeOptions, MAPS } from '@/lib/utils'
 
 interface NewReservationModalProps {
   isOpen: boolean
@@ -15,16 +15,18 @@ export function NewReservationModal({ isOpen, onClose, onCreated }: NewReservati
   const [date, setDate] = useState('')
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
+  const [requestedMap, setRequestedMap] = useState('')
   const [note, setNote] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   if (!isOpen) return null
 
+  const isAdmin = profile?.role === 'admin'
   const selectedDayOfWeek = date ? new Date(date).getDay() : null
   const startTimeOptions = getStartTimeOptions()
   const endTimeOptions = startTime && selectedDayOfWeek !== null
-    ? getEndTimeOptions(startTime, selectedDayOfWeek)
+    ? (isAdmin ? getEndTimeOptionsAdmin(startTime, selectedDayOfWeek) : getEndTimeOptions(startTime, selectedDayOfWeek))
     : []
 
   const handleSubmit = async (e: FormEvent) => {
@@ -46,7 +48,13 @@ export function NewReservationModal({ isOpen, onClose, onCreated }: NewReservati
           date,
           start_time: startTime,
           end_time: endTime,
+          requested_map: requestedMap || null,
           note: note || null,
+          ...(isAdmin ? {
+            status: 'accepted' as const,
+            reviewed_by: profile.id,
+            reviewed_at: new Date().toISOString(),
+          } : {}),
         })
 
       if (insertError) {
@@ -57,6 +65,7 @@ export function NewReservationModal({ isOpen, onClose, onCreated }: NewReservati
       setDate('')
       setStartTime('')
       setEndTime('')
+      setRequestedMap('')
       setNote('')
       onCreated()
       onClose()
@@ -133,7 +142,7 @@ export function NewReservationModal({ isOpen, onClose, onCreated }: NewReservati
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
               <Clock className="w-4 h-4" />
-              Heure de fin (max 2 heures)
+              Heure de fin{!isAdmin && ' (max 2 heures)'}
             </label>
             <select
               value={endTime}
@@ -145,6 +154,24 @@ export function NewReservationModal({ isOpen, onClose, onCreated }: NewReservati
               <option value="">Sélectionner</option>
               {endTimeOptions.map((t) => (
                 <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Map */}
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+              <MapPin className="w-4 h-4" />
+              Map demandée
+            </label>
+            <select
+              value={requestedMap}
+              onChange={(e) => setRequestedMap(e.target.value)}
+              className="w-full bg-dark-700 border border-dark-500 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-colors"
+            >
+              <option value="">Aucune</option>
+              {MAPS.map((m) => (
+                <option key={m} value={m}>{m}</option>
               ))}
             </select>
           </div>
@@ -165,12 +192,14 @@ export function NewReservationModal({ isOpen, onClose, onCreated }: NewReservati
           </div>
 
           {/* Info */}
-          <div className="flex items-start gap-2 bg-blue-500/10 border border-blue-500/20 rounded-lg px-4 py-3">
-            <Info className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
-            <p className="text-xs text-blue-300">
-              L'attribution du serveur sera confirmée par un admin dans les 24 heures.
-            </p>
-          </div>
+          {!isAdmin && (
+            <div className="flex items-start gap-2 bg-blue-500/10 border border-blue-500/20 rounded-lg px-4 py-3">
+              <Info className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
+              <p className="text-xs text-blue-300">
+                L'attribution du serveur sera confirmée par un admin dans les 24 heures.
+              </p>
+            </div>
+          )}
 
           {/* Error */}
           {error && (
@@ -193,7 +222,7 @@ export function NewReservationModal({ isOpen, onClose, onCreated }: NewReservati
               disabled={loading}
               className="flex-1 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-sm font-medium hover:from-blue-500 hover:to-cyan-400 transition-all disabled:opacity-50"
             >
-              {loading ? 'Envoi...' : 'Demander la réservation'}
+              {loading ? 'Envoi...' : isAdmin ? 'Créer la réservation' : 'Demander la réservation'}
             </button>
           </div>
         </form>

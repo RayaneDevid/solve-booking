@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import type { Reservation } from '@/types/database'
-import { SERVER_COLORS } from '@/lib/utils'
-import { Clock, Calendar, MessageSquare, Key, Server } from 'lucide-react'
+import { Calendar, Key, Server, MapPin } from 'lucide-react'
 
 interface MyReservationsProps {
   reservations: Reservation[]
+  onReservationClick?: (reservation: Reservation) => void
 }
 
 type FilterTab = 'pending' | 'accepted' | 'past'
 
-export function MyReservations({ reservations }: MyReservationsProps) {
+export function MyReservations({ reservations, onReservationClick }: MyReservationsProps) {
   const [activeTab, setActiveTab] = useState<FilterTab>('pending')
 
   const now = new Date()
@@ -58,7 +58,11 @@ export function MyReservations({ reservations }: MyReservationsProps) {
           </div>
         ) : (
           displayed.map((res) => (
-            <ReservationCard key={res.id} reservation={res} />
+            <ReservationCard
+              key={res.id}
+              reservation={res}
+              onClick={() => onReservationClick?.(res)}
+            />
           ))
         )}
       </div>
@@ -66,7 +70,7 @@ export function MyReservations({ reservations }: MyReservationsProps) {
   )
 }
 
-function ReservationCard({ reservation }: { reservation: Reservation }) {
+function ReservationCard({ reservation, onClick }: { reservation: Reservation; onClick?: () => void }) {
   const statusConfig = {
     pending: { label: 'En attente', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40' },
     accepted: { label: 'Acceptée', color: 'bg-green-500/20 text-green-400 border-green-500/40' },
@@ -76,7 +80,10 @@ function ReservationCard({ reservation }: { reservation: Reservation }) {
   const status = statusConfig[reservation.status]
 
   return (
-    <div className="bg-dark-800/70 border border-dark-500/30 rounded-xl p-4">
+    <div
+      className="bg-dark-800/70 border border-dark-500/30 rounded-xl p-4 cursor-pointer hover:border-dark-500/60 transition-colors"
+      onClick={onClick}
+    >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
@@ -93,6 +100,14 @@ function ReservationCard({ reservation }: { reservation: Reservation }) {
           {status.label}
         </span>
       </div>
+
+      {/* Map */}
+      {reservation.requested_map && (
+        <div className="flex items-center gap-2 mb-3">
+          <MapPin className="w-3.5 h-3.5 text-gray-400" />
+          <span className="text-xs text-gray-300">{reservation.requested_map}</span>
+        </div>
+      )}
 
       {/* Server info (si accepté) */}
       {reservation.status === 'accepted' && reservation.assigned_server && (

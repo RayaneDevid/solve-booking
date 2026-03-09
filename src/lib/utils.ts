@@ -11,6 +11,24 @@ export const MOIS = [
   'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
 ] as const
 
+// Liste des maps disponibles
+export const MAPS = [
+  'Konoha',
+  'Suna',
+  'Oto',
+  'Kiri',
+  'Konoha nuit',
+  'Suna nuit',
+  'Neutre',
+  'Tournoi',
+  'Ascension',
+  'Mont Myoboku',
+  'Tournoi pvp',
+  'Intervillage',
+  '35vs35',
+  'Vagues',
+] as const
+
 // Couleurs par serveur
 export const SERVER_COLORS = {
   1: { bg: 'bg-blue-500/80', border: 'border-blue-400', text: 'text-blue-300', dot: 'bg-blue-500', label: 'Serveur 1' },
@@ -179,6 +197,34 @@ export function getEndTimeOptions(startTime: string, dayOfWeek: number): string[
     // Vérifier que ça ne dépasse pas maxHour
     if (hour > maxHour && hour < 18) continue
     // Si on est à l'heure max, seule :00 est permise
+    if (hour === maxHour && minutes > 0) continue
+
+    options.push(`${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`)
+  }
+
+  return options
+}
+
+/**
+ * Génère les options d'heure de fin pour un admin (pas de limite de durée)
+ */
+export function getEndTimeOptionsAdmin(startTime: string, dayOfWeek: number): string[] {
+  const maxHour = isWeekend(dayOfWeek) ? 4 : 3
+
+  const options: string[] = []
+  const startMinutes = timeToMinutesSince18(startTime)
+  // Max possible: de startTime jusqu'à maxHour:00 (en créneaux de 15min)
+  const maxMinutes = isWeekend(dayOfWeek) ? 10 * 60 : 9 * 60 // 18h->04h = 10h, 18h->03h = 9h
+
+  for (let offset = 1; offset <= 200; offset++) {
+    const totalMinutes = startMinutes + offset * 15
+    if (totalMinutes > maxMinutes) break
+
+    let hour = 18 + Math.floor(totalMinutes / 60)
+    const minutes = totalMinutes % 60
+    if (hour >= 24) hour -= 24
+
+    if (hour > maxHour && hour < 18) continue
     if (hour === maxHour && minutes > 0) continue
 
     options.push(`${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`)

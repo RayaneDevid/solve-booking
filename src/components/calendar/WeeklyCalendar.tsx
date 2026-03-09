@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Reservation, Profile } from '@/types/database'
 import {
@@ -22,6 +22,7 @@ interface WeeklyCalendarProps {
   onNextWeek: () => void
   onToday: () => void
   serverFilter?: number | null // null = tous les serveurs
+  onReservationClick?: (reservation: Reservation) => void
 }
 
 export function WeeklyCalendar({
@@ -33,12 +34,21 @@ export function WeeklyCalendar({
   onNextWeek,
   onToday,
   serverFilter = null,
+  onReservationClick,
 }: WeeklyCalendarProps) {
   const allHours = getAllCalendarHours()
-  
+
   // Nombre total de lignes (heures) - on va jusqu'à 04:00 max
   // Chaque heure = 60px de hauteur
   const HOUR_HEIGHT = 60
+
+  // Current time tracking for the time indicator bar
+  const [now, setNow] = useState(() => new Date())
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 60_000)
+    return () => clearInterval(interval)
+  }, [])
 
   // Grouper les réservations par jour
   const reservationsByDay = useMemo(() => {
@@ -119,6 +129,52 @@ export function WeeklyCalendar({
 
           {/* Time grid */}
           <div className="relative">
+            {/* Current time indicator bar */}
+            {(() => {
+              const nowHour = now.getHours()
+              const nowMinute = now.getMinutes()
+              // Check if current time is in the calendar range (18h-04h)
+              const isInRange = nowHour >= 18 || nowHour <= 4
+              if (!isInRange) return null
+
+              // Find which day column to show it on
+              const todayStr = formatDateISO(now)
+              // If it's after midnight (0h-4h), the calendar day is actually yesterday
+              const calendarDate = nowHour < 18
+                ? (() => { const d = new Date(now); d.setDate(d.getDate() - 1); return formatDateISO(d) })()
+                : todayStr
+
+              const dayIndex = weekDays.findIndex((d) => formatDateISO(d) === calendarDate)
+              if (dayIndex === -1) return null
+
+              // Calculate vertical position
+              const minutesSince18 = nowHour < 18
+                ? (24 - 18 + nowHour) * 60 + nowMinute
+                : (nowHour - 18) * 60 + nowMinute
+              const topPx = minutesSince18 * (HOUR_HEIGHT / 60)
+
+              // Horizontal position: skip the 70px time column, then position on the right day
+              const leftPercent = (dayIndex / 7) * 100
+              const widthPercent = 100 / 7
+
+              return (
+                <div
+                  className="absolute pointer-events-none"
+                  style={{
+                    top: `${topPx}px`,
+                    left: `calc(70px + ${leftPercent}%)`,
+                    width: `${widthPercent}%`,
+                    zIndex: 20,
+                  }}
+                >
+                  <div className="relative flex items-center">
+                    <div className="absolute -left-1.5 w-3 h-3 rounded-full bg-red-500 shadow-lg shadow-red-500/50" />
+                    <div className="w-full h-[2px] bg-red-500 shadow-sm shadow-red-500/50" />
+                  </div>
+                </div>
+              )
+            })()}
+
             {allHours.slice(0, -1).map((hour, hourIndex) => (
               <div
                 key={hour}
@@ -155,6 +211,7 @@ export function WeeklyCalendar({
                           reservations={reservationsByDay[dateStr] || []}
                           profiles={profiles}
                           hourHeight={HOUR_HEIGHT}
+                          onReservationClick={onReservationClick}
                         />
                       )}
                     </div>
@@ -188,10 +245,12 @@ function ReservationBlocks({
   reservations,
   profiles,
   hourHeight,
+  onReservationClick,
 }: {
   reservations: Reservation[]
   profiles: Record<string, Profile>
   hourHeight: number
+  onReservationClick?: (reservation: Reservation) => void
 }) {
   if (reservations.length === 0) return null
 
@@ -218,8 +277,9 @@ function ReservationBlocks({
           return (
             <div
               key={reservation.id}
-              className="absolute rounded-md border-2 border-dashed border-gray-500/60 bg-gray-600/30 px-1.5 py-1 overflow-hidden pointer-events-auto"
+              className="absolute rounded-md border-2 border-dashed border-gray-500/60 bg-gray-600/30 px-1.5 py-1 overflow-hidden pointer-events-auto cursor-pointer hover:brightness-125 transition-all"
               style={{ top: `${top}px`, height: `${height}px`, width, left }}
+              onClick={() => onReservationClick?.(reservation)}
             >
               <p className="text-[10px] font-medium text-gray-300 truncate">{username}</p>
               <p className="text-[9px] text-gray-500">{timeLabel}</p>
@@ -232,8 +292,9 @@ function ReservationBlocks({
           return (
             <div
               key={reservation.id}
-              className="absolute rounded-md bg-red-900/40 border border-red-800/50 px-1.5 py-1 overflow-hidden opacity-40 pointer-events-auto"
+              className="absolute rounded-md bg-red-900/40 border border-red-800/50 px-1.5 py-1 overflow-hidden opacity-40 pointer-events-auto cursor-pointer hover:opacity-60 transition-all"
               style={{ top: `${top}px`, height: `${height}px`, width, left }}
+              onClick={() => onReservationClick?.(reservation)}
             >
               <p className="text-[10px] font-medium text-red-300 line-through truncate">{username}</p>
               <p className="text-[9px] text-red-400">{timeLabel}</p>
@@ -259,8 +320,9 @@ function ReservationBlocks({
         return (
           <div
             key={reservation.id}
-            className={`absolute rounded-md ${colors.bg} ${colors.border} border px-1.5 py-1 overflow-hidden pointer-events-auto`}
+            className={`absolute rounded-md ${colors.bg} ${colors.border} border px-1.5 py-1 overflow-hidden pointer-events-auto cursor-pointer hover:brightness-125 transition-all`}
             style={{ top: `${top}px`, height: `${height}px`, width, left }}
+            onClick={() => onReservationClick?.(reservation)}
           >
             {isComplete && (
               <span className="absolute top-0.5 right-0.5 text-[8px] bg-red-500 text-white px-1 rounded font-bold">
