@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { X, Calendar, Clock, Server, Key, MapPin, FileText, Pencil, Trash2 } from 'lucide-react'
+import { X, Calendar, Clock, Server as ServerIcon, Key, MapPin, FileText, Pencil, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { MAPS, getStartTimeOptions, getEndTimeOptions, getEndTimeOptionsAdmin, isWeekend } from '@/lib/utils'
@@ -112,7 +112,7 @@ export function ReservationDetailModal({ reservation, profiles = {}, onClose, on
           {reservation.status === 'accepted' && reservation.assigned_server && (
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-400 flex items-center gap-2">
-                <Server className="w-3.5 h-3.5" /> Serveur
+                <ServerIcon className="w-3.5 h-3.5" /> Serveur
               </span>
               <span className="text-sm text-white">Serveur {reservation.assigned_server}</span>
             </div>
@@ -199,6 +199,7 @@ function EditReservationModal({ reservation, onClose, onUpdated }: { reservation
   const [startTime, setStartTime] = useState(reservation.start_time.slice(0, 5))
   const [endTime, setEndTime] = useState(reservation.end_time.slice(0, 5))
   const [requestedMap, setRequestedMap] = useState(reservation.requested_map || '')
+  const [assignedServer, setAssignedServer] = useState(reservation.assigned_server ? String(reservation.assigned_server) : '')
   const [note, setNote] = useState(reservation.note || '')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -226,6 +227,7 @@ function EditReservationModal({ reservation, onClose, onUpdated }: { reservation
           start_time: startTime,
           end_time: endTime,
           requested_map: requestedMap || null,
+          assigned_server: assignedServer ? Number(assignedServer) : null,
           note: note || null,
         })
         .eq('id', reservation.id)
@@ -308,6 +310,22 @@ function EditReservationModal({ reservation, onClose, onUpdated }: { reservation
             >
               <option value="">Aucune</option>
               {MAPS.map((m) => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+              <ServerIcon className="w-4 h-4" /> Serveur demandé
+            </label>
+            <select
+              value={assignedServer}
+              onChange={(e) => setAssignedServer(e.target.value)}
+              className="w-full bg-dark-700 border border-dark-500 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-colors"
+            >
+              <option value="">Aucun</option>
+              <option value="1">Server Event 1</option>
+              <option value="2">Server Event 2</option>
+              <option value="3">Server Event 3</option>
             </select>
           </div>
 

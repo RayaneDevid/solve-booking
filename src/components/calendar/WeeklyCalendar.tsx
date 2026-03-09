@@ -281,9 +281,9 @@ function ReservationBlocks({
               style={{ top: `${top}px`, height: `${height}px`, width, left }}
               onClick={() => onReservationClick?.(reservation)}
             >
-              <p className="text-[10px] font-medium text-gray-300 truncate">{username}</p>
-              <p className="text-[9px] text-gray-500">{timeLabel}</p>
-              <span className="text-[9px] text-yellow-400">En attente</span>
+              <p className="text-xs font-medium text-gray-300 truncate">{username}</p>
+              <p className="text-[11px] text-gray-500">{timeLabel}</p>
+              <span className="text-[11px] text-yellow-400">En attente</span>
             </div>
           )
         }
@@ -296,9 +296,9 @@ function ReservationBlocks({
               style={{ top: `${top}px`, height: `${height}px`, width, left }}
               onClick={() => onReservationClick?.(reservation)}
             >
-              <p className="text-[10px] font-medium text-red-300 line-through truncate">{username}</p>
-              <p className="text-[9px] text-red-400">{timeLabel}</p>
-              <span className="text-[9px] text-red-400 font-medium">Refusée</span>
+              <p className="text-xs font-medium text-red-300 line-through truncate">{username}</p>
+              <p className="text-[11px] text-red-400">{timeLabel}</p>
+              <span className="text-[11px] text-red-400 font-medium">Refusée</span>
             </div>
           )
         }
@@ -329,9 +329,9 @@ function ReservationBlocks({
                 COMPLET
               </span>
             )}
-            <p className="text-[10px] font-bold text-white truncate">{username}</p>
-            <p className="text-[9px] text-white/80">{timeLabel}</p>
-            <p className="text-[9px] text-white/70">S{server}</p>
+            <p className="text-xs font-bold text-white truncate">{username}</p>
+            <p className="text-[11px] text-white/80">{timeLabel}</p>
+            <p className="text-[11px] text-white/70">S{server}</p>
           </div>
         )
       })}

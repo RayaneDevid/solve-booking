@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { X, Calendar, Clock, FileText, Info, MapPin } from 'lucide-react'
+import { X, Calendar, Clock, FileText, Info, MapPin, Server } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { getEndTimeOptions, getEndTimeOptionsAdmin, getStartTimeOptions, MAPS } from '@/lib/utils'
@@ -16,6 +16,7 @@ export function NewReservationModal({ isOpen, onClose, onCreated }: NewReservati
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
   const [requestedMap, setRequestedMap] = useState('')
+  const [assignedServer, setAssignedServer] = useState('')
   const [note, setNote] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -49,6 +50,7 @@ export function NewReservationModal({ isOpen, onClose, onCreated }: NewReservati
           start_time: startTime,
           end_time: endTime,
           requested_map: requestedMap || null,
+          assigned_server: assignedServer ? Number(assignedServer) : null,
           note: note || null,
           ...(isAdmin ? {
             status: 'accepted' as const,
@@ -66,6 +68,7 @@ export function NewReservationModal({ isOpen, onClose, onCreated }: NewReservati
       setStartTime('')
       setEndTime('')
       setRequestedMap('')
+      setAssignedServer('')
       setNote('')
       onCreated()
       onClose()
@@ -173,6 +176,24 @@ export function NewReservationModal({ isOpen, onClose, onCreated }: NewReservati
               {MAPS.map((m) => (
                 <option key={m} value={m}>{m}</option>
               ))}
+            </select>
+          </div>
+
+          {/* Server */}
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+              <Server className="w-4 h-4" />
+              Serveur demandé
+            </label>
+            <select
+              value={assignedServer}
+              onChange={(e) => setAssignedServer(e.target.value)}
+              className="w-full bg-dark-700 border border-dark-500 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-colors"
+            >
+              <option value="">Aucun</option>
+              <option value="1">Server Event 1</option>
+              <option value="2">Server Event 2</option>
+              <option value="3">Server Event 3</option>
             </select>
           </div>
 
