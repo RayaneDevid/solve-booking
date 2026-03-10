@@ -108,13 +108,13 @@ export function ReservationDetailModal({ reservation, profiles = {}, onClose, on
             </div>
           )}
 
-          {/* Server (if accepted) */}
-          {reservation.status === 'accepted' && reservation.assigned_server && (
+          {/* Requested server */}
+          {reservation.assigned_server && (
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-400 flex items-center gap-2">
-                <ServerIcon className="w-3.5 h-3.5" /> Serveur
+                <ServerIcon className="w-3.5 h-3.5" /> Serveur demandé
               </span>
-              <span className="text-sm text-white">Serveur {reservation.assigned_server}</span>
+              <span className="text-sm text-white">Server Event {reservation.assigned_server}</span>
             </div>
           )}
 

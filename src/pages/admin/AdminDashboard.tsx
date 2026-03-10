@@ -169,6 +169,11 @@ export function AdminDashboard() {
                         <MapPin className="w-3 h-3" /> {res.requested_map}
                       </p>
                     )}
+                    {res.assigned_server && (
+                      <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                        <Server className="w-3 h-3" /> Server Event {res.assigned_server}
+                      </p>
+                    )}
                     {res.note && (
                       <p className="text-xs text-gray-500 mb-3 bg-dark-700/50 rounded px-2 py-1">{res.note}</p>
                     )}
