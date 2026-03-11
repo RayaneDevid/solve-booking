@@ -201,7 +201,7 @@ export function NewReservationModal({ isOpen, onClose, onCreated }: NewReservati
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
               <FileText className="w-4 h-4" />
-              Note (optionnelle)
+              Raison de la réservation (obligatoire)
             </label>
             <textarea
               value={note}
@@ -217,7 +217,7 @@ export function NewReservationModal({ isOpen, onClose, onCreated }: NewReservati
             <div className="flex items-start gap-2 bg-blue-500/10 border border-blue-500/20 rounded-lg px-4 py-3">
               <Info className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
               <p className="text-xs text-blue-300">
-                L'attribution du serveur sera confirmée par un admin dans les 24 heures.
+                L'attribution du serveur sera confirmée par un admin dans les 24 à 72 heures.
               </p>
             </div>
           )}
