@@ -153,17 +153,13 @@ export function WeeklyCalendar({
                 : (nowHour - 18) * 60 + nowMinute
               const topPx = minutesSince18 * (HOUR_HEIGHT / 60)
 
-              // Horizontal position: skip the 70px time column, then position on the right day
-              const leftPercent = (dayIndex / 7) * 100
-              const widthPercent = 100 / 7
-
               return (
                 <div
                   className="absolute pointer-events-none"
                   style={{
                     top: `${topPx}px`,
-                    left: `calc(70px + ${leftPercent}%)`,
-                    width: `${widthPercent}%`,
+                    left: `calc(70px + (100% - 70px) * ${dayIndex} / 7)`,
+                    width: `calc((100% - 70px) / 7)`,
                     zIndex: 20,
                   }}
                 >
@@ -307,15 +303,26 @@ function ReservationBlocks({
         const server = reservation.assigned_server as 1 | 2 | 3
         const colors = SERVER_COLORS[server] || SERVER_COLORS[1]
 
-        // Vérifier si complet (3 serveurs réservés au même créneau)
+        // Vérifier si complet (les 3 serveurs sont occupés au même instant)
+        // Il faut que 2 autres réservations sur les 2 autres serveurs se chevauchent
+        // mutuellement ET avec la réservation actuelle
         const overlapping = reservations.filter(
           (r) =>
             r.status === 'accepted' &&
             r.id !== reservation.id &&
+            r.assigned_server !== server &&
             timeToMinutesSince18(r.start_time) < timeToMinutesSince18(reservation.end_time) &&
             timeToMinutesSince18(r.end_time) > timeToMinutesSince18(reservation.start_time)
         )
-        const isComplete = overlapping.length >= 2
+        const otherServers = [1, 2, 3].filter((s) => s !== server)
+        const onServer0 = overlapping.filter((r) => r.assigned_server === otherServers[0])
+        const onServer1 = overlapping.filter((r) => r.assigned_server === otherServers[1])
+        const isComplete = onServer0.some((a) =>
+          onServer1.some((b) =>
+            timeToMinutesSince18(a.start_time) < timeToMinutesSince18(b.end_time) &&
+            timeToMinutesSince18(a.end_time) > timeToMinutesSince18(b.start_time)
+          )
+        )
 
         return (
           <div
@@ -364,10 +371,11 @@ function assignColumns(reservations: Reservation[]) {
     }
   }
 
-  // Pour chaque groupe, assigner des colonnes
+  // Pour chaque groupe, assigner des colonnes triées par numéro de serveur
   for (const group of groups) {
     const totalColumns = group.length
-    group.forEach((reservation, index) => {
+    const sorted = [...group].sort((a, b) => (a.assigned_server || 99) - (b.assigned_server || 99))
+    sorted.forEach((reservation, index) => {
       result.push({ reservation, column: index, totalColumns })
     })
   }
