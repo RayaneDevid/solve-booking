@@ -279,6 +279,7 @@ export function AdminDashboard() {
         isOpen={showNewModal}
         onClose={() => setShowNewModal(false)}
         onCreated={fetchData}
+        reservations={reservations}
       />
 
       {selectedReservation && (
@@ -287,6 +288,7 @@ export function AdminDashboard() {
           profiles={profiles}
           onClose={() => setSelectedReservation(null)}
           onUpdated={fetchData}
+          allReservations={reservations}
         />
       )}
     </div>

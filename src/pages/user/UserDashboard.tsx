@@ -137,6 +137,7 @@ export function UserDashboard() {
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         onCreated={fetchReservations}
+        reservations={reservations}
       />
 
       {/* Reservation Detail Modal */}
@@ -146,6 +147,7 @@ export function UserDashboard() {
           profiles={profiles}
           onClose={() => setSelectedReservation(null)}
           onUpdated={fetchReservations}
+          allReservations={reservations}
         />
       )}
     </div>

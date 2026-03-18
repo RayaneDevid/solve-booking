@@ -1,16 +1,18 @@
-import { useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { X, Calendar, Clock, FileText, Info, MapPin, Server } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
-import { getEndTimeOptions, getEndTimeOptionsAdmin, getStartTimeOptions, MAPS } from '@/lib/utils'
+import { getEndTimeOptions, getEndTimeOptionsAdmin, getStartTimeOptions, timeToMinutesSince18, MAPS } from '@/lib/utils'
+import type { Reservation } from '@/types/database'
 
 interface NewReservationModalProps {
   isOpen: boolean
   onClose: () => void
   onCreated: () => void
+  reservations: Reservation[]
 }
 
-export function NewReservationModal({ isOpen, onClose, onCreated }: NewReservationModalProps) {
+export function NewReservationModal({ isOpen, onClose, onCreated, reservations }: NewReservationModalProps) {
   const { profile } = useAuth()
   const [date, setDate] = useState('')
   const [startTime, setStartTime] = useState('')
@@ -21,7 +23,30 @@ export function NewReservationModal({ isOpen, onClose, onCreated }: NewReservati
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  // Serveurs déjà pris sur le créneau sélectionné
+  const takenServers = useMemo(() => {
+    if (!date || !startTime || !endTime) return new Set<number>()
+    const newStart = timeToMinutesSince18(startTime)
+    const newEnd = timeToMinutesSince18(endTime)
+    const taken = new Set<number>()
+    for (const r of reservations) {
+      if (r.date !== date || !r.assigned_server) continue
+      if (r.status === 'refused') continue
+      const rStart = timeToMinutesSince18(r.start_time)
+      const rEnd = timeToMinutesSince18(r.end_time)
+      if (rStart < newEnd && rEnd > newStart) {
+        taken.add(r.assigned_server)
+      }
+    }
+    return taken
+  }, [date, startTime, endTime, reservations])
+
   if (!isOpen) return null
+
+  // Reset le serveur si le créneau change et qu'il est devenu indisponible
+  if (assignedServer && takenServers.has(Number(assignedServer))) {
+    setAssignedServer('')
+  }
 
   const isAdmin = profile?.role === 'admin'
   const selectedDayOfWeek = date ? new Date(date).getDay() : null
@@ -191,9 +216,11 @@ export function NewReservationModal({ isOpen, onClose, onCreated }: NewReservati
               className="w-full bg-dark-700 border border-dark-500 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-colors"
             >
               <option value="">Aucun</option>
-              <option value="1">Server Event 1</option>
-              <option value="2">Server Event 2</option>
-              <option value="3">Server Event 3</option>
+              {[1, 2, 3].map((s) => (
+                <option key={s} value={s} disabled={takenServers.has(s)}>
+                  Server Event {s}{takenServers.has(s) ? ' (indisponible)' : ''}
+                </option>
+              ))}
             </select>
           </div>
 

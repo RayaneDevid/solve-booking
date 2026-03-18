@@ -1,8 +1,8 @@
-import { useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { X, Calendar, Clock, Server as ServerIcon, Key, MapPin, FileText, Pencil, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { MAPS, getStartTimeOptions, getEndTimeOptions, getEndTimeOptionsAdmin, isWeekend } from '@/lib/utils'
+import { MAPS, getStartTimeOptions, getEndTimeOptions, getEndTimeOptionsAdmin, isWeekend, timeToMinutesSince18 } from '@/lib/utils'
 import type { Reservation, Profile } from '@/types/database'
 
 interface ReservationDetailModalProps {
@@ -10,9 +10,10 @@ interface ReservationDetailModalProps {
   profiles?: Record<string, Profile>
   onClose: () => void
   onUpdated: () => void
+  allReservations: Reservation[]
 }
 
-export function ReservationDetailModal({ reservation, profiles = {}, onClose, onUpdated }: ReservationDetailModalProps) {
+export function ReservationDetailModal({ reservation, profiles = {}, onClose, onUpdated, allReservations }: ReservationDetailModalProps) {
   const { profile } = useAuth()
   const [editing, setEditing] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -27,6 +28,7 @@ export function ReservationDetailModal({ reservation, profiles = {}, onClose, on
     return (
       <EditReservationModal
         reservation={reservation}
+        allReservations={allReservations}
         onClose={() => setEditing(false)}
         onUpdated={() => { onUpdated(); onClose() }}
       />
@@ -192,7 +194,7 @@ export function ReservationDetailModal({ reservation, profiles = {}, onClose, on
   )
 }
 
-function EditReservationModal({ reservation, onClose, onUpdated }: { reservation: Reservation; onClose: () => void; onUpdated: () => void }) {
+function EditReservationModal({ reservation, allReservations, onClose, onUpdated }: { reservation: Reservation; allReservations: Reservation[]; onClose: () => void; onUpdated: () => void }) {
   const { profile } = useAuth()
   const isAdmin = profile?.role === 'admin'
   const [date, setDate] = useState(reservation.date)
@@ -209,6 +211,29 @@ function EditReservationModal({ reservation, onClose, onUpdated }: { reservation
   const endTimeOptions = startTime && selectedDayOfWeek !== null
     ? (isAdmin ? getEndTimeOptionsAdmin(startTime, selectedDayOfWeek) : getEndTimeOptions(startTime, selectedDayOfWeek))
     : []
+
+  // Serveurs déjà pris sur le créneau sélectionné (exclure la résa en cours d'édition)
+  const takenServers = useMemo(() => {
+    if (!date || !startTime || !endTime) return new Set<number>()
+    const newStart = timeToMinutesSince18(startTime)
+    const newEnd = timeToMinutesSince18(endTime)
+    const taken = new Set<number>()
+    for (const r of allReservations) {
+      if (r.id === reservation.id) continue
+      if (r.date !== date || !r.assigned_server) continue
+      if (r.status === 'refused') continue
+      const rStart = timeToMinutesSince18(r.start_time)
+      const rEnd = timeToMinutesSince18(r.end_time)
+      if (rStart < newEnd && rEnd > newStart) {
+        taken.add(r.assigned_server)
+      }
+    }
+    return taken
+  }, [date, startTime, endTime, allReservations, reservation.id])
+
+  if (assignedServer && takenServers.has(Number(assignedServer))) {
+    setAssignedServer('')
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -323,9 +348,11 @@ function EditReservationModal({ reservation, onClose, onUpdated }: { reservation
               className="w-full bg-dark-700 border border-dark-500 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-colors"
             >
               <option value="">Aucun</option>
-              <option value="1">Server Event 1</option>
-              <option value="2">Server Event 2</option>
-              <option value="3">Server Event 3</option>
+              {[1, 2, 3].map((s) => (
+                <option key={s} value={s} disabled={takenServers.has(s)}>
+                  Server Event {s}{takenServers.has(s) ? ' (indisponible)' : ''}
+                </option>
+              ))}
             </select>
           </div>
 
