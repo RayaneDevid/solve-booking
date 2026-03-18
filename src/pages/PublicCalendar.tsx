@@ -140,6 +140,7 @@ export function PublicCalendar() {
           profiles={profiles}
           onClose={() => setSelectedReservation(null)}
           onUpdated={fetchReservations}
+          allReservations={reservations}
         />
       )}
     </div>
