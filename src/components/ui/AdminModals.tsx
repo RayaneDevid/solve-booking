@@ -3,6 +3,7 @@ import { X, Server, Key, MessageSquare } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import type { Reservation, Profile } from '@/types/database'
+import { CustomSelect } from './CustomSelect'
 
 interface AcceptModalProps {
   reservation: Reservation
@@ -79,19 +80,16 @@ export function AcceptModal({ reservation, profiles, existingServers, onClose, o
               <Server className="w-4 h-4" />
               Serveur à attribuer
             </label>
-            <select
+            <CustomSelect
               value={server}
-              onChange={(e) => setServer(e.target.value)}
-              className="w-full bg-dark-700 border border-dark-500 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-colors"
-              required
-            >
-              <option value="">Sélectionner un serveur</option>
-              {[1, 2, 3].map((s) => (
-                <option key={s} value={s} disabled={existingServers.includes(s)}>
-                  Serveur {s} {existingServers.includes(s) ? '(occupé)' : '(disponible)'}
-                </option>
-              ))}
-            </select>
+              onChange={setServer}
+              options={[1, 2, 3].map((s) => ({
+                value: String(s),
+                label: `Serveur ${s} ${existingServers.includes(s) ? '(occupé)' : '(disponible)'}`,
+                disabled: existingServers.includes(s),
+              }))}
+              placeholder="Sélectionner un serveur"
+            />
           </div>
 
           <div>

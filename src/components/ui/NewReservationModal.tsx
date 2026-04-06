@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { getEndTimeOptions, getEndTimeOptionsAdmin, getStartTimeOptions, timeToMinutesSince18, MAPS } from '@/lib/utils'
 import type { Reservation } from '@/types/database'
+import { CustomSelect } from './CustomSelect'
 
 interface NewReservationModalProps {
   isOpen: boolean
@@ -149,21 +150,13 @@ export function NewReservationModal({ isOpen, onClose, onCreated, reservations }
               <Clock className="w-4 h-4" />
               Heure de début
             </label>
-            <select
+            <CustomSelect
               value={startTime}
-              onChange={(e) => {
-                setStartTime(e.target.value)
-                setEndTime('')
-              }}
-              className="w-full bg-dark-700 border border-dark-500 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-colors"
-              required
+              onChange={(v) => { setStartTime(v); setEndTime('') }}
+              options={startTimeOptions.map((t) => ({ value: t, label: t }))}
+              placeholder="Sélectionner"
               disabled={!date}
-            >
-              <option value="">Sélectionner</option>
-              {startTimeOptions.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
+            />
           </div>
 
           {/* End Time */}
@@ -172,18 +165,13 @@ export function NewReservationModal({ isOpen, onClose, onCreated, reservations }
               <Clock className="w-4 h-4" />
               Heure de fin{!isAdmin && ' (max 2 heures)'}
             </label>
-            <select
+            <CustomSelect
               value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              className="w-full bg-dark-700 border border-dark-500 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-colors"
-              required
+              onChange={setEndTime}
+              options={endTimeOptions.map((t) => ({ value: t, label: t }))}
+              placeholder="Sélectionner"
               disabled={!startTime}
-            >
-              <option value="">Sélectionner</option>
-              {endTimeOptions.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
+            />
           </div>
 
           {/* Map */}
@@ -192,16 +180,12 @@ export function NewReservationModal({ isOpen, onClose, onCreated, reservations }
               <MapPin className="w-4 h-4" />
               Map demandée
             </label>
-            <select
+            <CustomSelect
               value={requestedMap}
-              onChange={(e) => setRequestedMap(e.target.value)}
-              className="w-full bg-dark-700 border border-dark-500 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-colors"
-            >
-              <option value="">Aucune</option>
-              {MAPS.map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
+              onChange={setRequestedMap}
+              options={MAPS.map((m) => ({ value: m, label: m }))}
+              placeholder="Aucune"
+            />
           </div>
 
           {/* Server */}
@@ -210,18 +194,16 @@ export function NewReservationModal({ isOpen, onClose, onCreated, reservations }
               <Server className="w-4 h-4" />
               Serveur demandé
             </label>
-            <select
+            <CustomSelect
               value={assignedServer}
-              onChange={(e) => setAssignedServer(e.target.value)}
-              className="w-full bg-dark-700 border border-dark-500 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-colors"
-            >
-              <option value="">Aucun</option>
-              {[1, 2, 3].map((s) => (
-                <option key={s} value={s} disabled={takenServers.has(s)}>
-                  Server Event {s}{takenServers.has(s) ? ' (indisponible)' : ''}
-                </option>
-              ))}
-            </select>
+              onChange={setAssignedServer}
+              options={[1, 2, 3].map((s) => ({
+                value: String(s),
+                label: `Server Event ${s}${takenServers.has(s) ? ' (indisponible)' : ''}`,
+                disabled: takenServers.has(s),
+              }))}
+              placeholder="Aucun"
+            />
           </div>
 
           {/* Note */}
