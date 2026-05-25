@@ -200,6 +200,9 @@ export function NewReservationModal({ isOpen, onClose, onCreated, reservations }
               }))}
               placeholder="Aucun"
             />
+            <p className="mt-2 text-xs text-gray-400">
+              Deux réservations sur le même Server Event doivent être espacées d'au moins 15 minutes.
+            </p>
           </div>
 
           {/* Note */}
@@ -222,7 +225,7 @@ export function NewReservationModal({ isOpen, onClose, onCreated, reservations }
             <div className="flex items-start gap-2 bg-blue-500/10 border border-blue-500/20 rounded-lg px-4 py-3">
               <Info className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
               <p className="text-xs text-blue-300">
-                L'attribution du serveur sera confirmée par un admin dans les 24 à 72 heures. Deux réservations sur le même Server Event doivent être espacées de 15 minutes.
+                L'attribution du serveur sera confirmée par un admin dans les 24 à 72 heures.
               </p>
             </div>
           )}
