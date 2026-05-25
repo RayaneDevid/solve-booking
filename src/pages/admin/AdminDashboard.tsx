@@ -7,6 +7,7 @@ import { AcceptModal, RefuseModal } from '@/components/ui/AdminModals'
 import { NewReservationModal } from '@/components/ui/NewReservationModal'
 import { ReservationDetailModal } from '@/components/ui/ReservationDetailModal'
 import { getMonday, getWeekDays, formatDateISO, timeToMinutesSince18 } from '@/lib/utils'
+import { useReservationRealtime } from '@/hooks/useReservationRealtime'
 import type { Reservation, Profile } from '@/types/database'
 
 export function AdminDashboard() {
@@ -63,18 +64,14 @@ export function AdminDashboard() {
     fetchData()
   }, [fetchData])
 
-  useEffect(() => {
-    const channel = supabase
-      .channel('admin-reservations')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, () => {
-        fetchData()
-      })
-      .subscribe()
+  useReservationRealtime(fetchData, { channelName: 'admin-reservations' })
 
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [fetchData])
+  useEffect(() => {
+    setSelectedReservation((currentReservation) => {
+      if (!currentReservation) return currentReservation
+      return allReservations.find((res) => res.id === currentReservation.id) || null
+    })
+  }, [allReservations])
 
   const handlePrevWeek = () => {
     const prev = new Date(currentMonday)

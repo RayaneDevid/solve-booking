@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { WeeklyCalendar } from '@/components/calendar/WeeklyCalendar'
 import { ReservationDetailModal } from '@/components/ui/ReservationDetailModal'
 import { getMonday, getWeekDays, formatDateISO } from '@/lib/utils'
+import { useReservationRealtime } from '@/hooks/useReservationRealtime'
 import type { Reservation, Profile } from '@/types/database'
 import logoImg from '@/assets/logo.png'
 
@@ -50,18 +51,14 @@ export function PublicCalendar() {
     fetchReservations()
   }, [fetchReservations])
 
-  useEffect(() => {
-    const channel = supabase
-      .channel('public-reservations')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, () => {
-        fetchReservations()
-      })
-      .subscribe()
+  useReservationRealtime(fetchReservations, { channelName: 'public-reservations' })
 
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [fetchReservations])
+  useEffect(() => {
+    setSelectedReservation((currentReservation) => {
+      if (!currentReservation) return currentReservation
+      return reservations.find((res) => res.id === currentReservation.id) || null
+    })
+  }, [reservations])
 
   const handlePrevWeek = () => {
     const prev = new Date(currentMonday)
