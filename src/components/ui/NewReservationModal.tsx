@@ -2,7 +2,7 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { X, Calendar, Clock, FileText, Info, MapPin, Server } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
-import { getEndTimeOptions, getEndTimeOptionsAdmin, getStartTimeOptions, timeToMinutesSince18, MAPS } from '@/lib/utils'
+import { getEndTimeOptions, getEndTimeOptionsAdmin, getStartTimeOptions, MAPS, RESERVATION_BUFFER_MINUTES, timeRangesConflict } from '@/lib/utils'
 import type { Reservation } from '@/types/database'
 import { CustomSelect } from './CustomSelect'
 
@@ -27,15 +27,11 @@ export function NewReservationModal({ isOpen, onClose, onCreated, reservations }
   // Serveurs déjà pris sur le créneau sélectionné
   const takenServers = useMemo(() => {
     if (!date || !startTime || !endTime) return new Set<number>()
-    const newStart = timeToMinutesSince18(startTime)
-    const newEnd = timeToMinutesSince18(endTime)
     const taken = new Set<number>()
     for (const r of reservations) {
       if (r.date !== date || !r.assigned_server) continue
       if (r.status === 'refused') continue
-      const rStart = timeToMinutesSince18(r.start_time)
-      const rEnd = timeToMinutesSince18(r.end_time)
-      if (rStart < newEnd && rEnd > newStart) {
+      if (timeRangesConflict(startTime, endTime, r.start_time, r.end_time, RESERVATION_BUFFER_MINUTES)) {
         taken.add(r.assigned_server)
       }
     }
@@ -226,7 +222,7 @@ export function NewReservationModal({ isOpen, onClose, onCreated, reservations }
             <div className="flex items-start gap-2 bg-blue-500/10 border border-blue-500/20 rounded-lg px-4 py-3">
               <Info className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
               <p className="text-xs text-blue-300">
-                L'attribution du serveur sera confirmée par un admin dans les 24 à 72 heures.
+                L'attribution du serveur sera confirmée par un admin dans les 24 à 72 heures. Deux réservations sur le même Server Event doivent être espacées de 15 minutes.
               </p>
             </div>
           )}

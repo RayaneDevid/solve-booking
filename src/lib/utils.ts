@@ -36,6 +36,8 @@ export const SERVER_COLORS = {
   3: { bg: 'bg-orange-500/80', border: 'border-orange-400', text: 'text-orange-300', dot: 'bg-orange-500', label: 'Serveur 3' },
 } as const
 
+export const RESERVATION_BUFFER_MINUTES = 15
+
 /**
  * Retourne true si le jour est un jour de weekend (ven, sam, dim)
  * dayOfWeek: 0 = dimanche, 1 = lundi, ... 6 = samedi (JS Date standard)
@@ -105,6 +107,21 @@ export function durationInMinutes(start: string, end: string): number {
   const startMin = timeToMinutesSince18(start)
   const endMin = timeToMinutesSince18(end)
   return endMin - startMin
+}
+
+export function timeRangesConflict(
+  start: string,
+  end: string,
+  otherStart: string,
+  otherEnd: string,
+  bufferMinutes = 0
+): boolean {
+  const startMin = timeToMinutesSince18(start)
+  const endMin = timeToMinutesSince18(end)
+  const otherStartMin = timeToMinutesSince18(otherStart)
+  const otherEndMin = timeToMinutesSince18(otherEnd)
+
+  return startMin < otherEndMin + bufferMinutes && endMin > otherStartMin - bufferMinutes
 }
 
 /**

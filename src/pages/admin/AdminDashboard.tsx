@@ -6,7 +6,7 @@ import { WeeklyCalendar } from '@/components/calendar/WeeklyCalendar'
 import { AcceptModal, RefuseModal } from '@/components/ui/AdminModals'
 import { NewReservationModal } from '@/components/ui/NewReservationModal'
 import { ReservationDetailModal } from '@/components/ui/ReservationDetailModal'
-import { getMonday, getWeekDays, formatDateISO, timeToMinutesSince18 } from '@/lib/utils'
+import { getMonday, getWeekDays, formatDateISO, RESERVATION_BUFFER_MINUTES, timeRangesConflict } from '@/lib/utils'
 import { useReservationRealtime } from '@/hooks/useReservationRealtime'
 import type { Reservation, Profile } from '@/types/database'
 
@@ -103,8 +103,7 @@ export function AdminDashboard() {
         (r) =>
           r.status === 'accepted' &&
           r.date === res.date &&
-          timeToMinutesSince18(r.start_time) < timeToMinutesSince18(res.end_time) &&
-          timeToMinutesSince18(r.end_time) > timeToMinutesSince18(res.start_time)
+          timeRangesConflict(res.start_time, res.end_time, r.start_time, r.end_time, RESERVATION_BUFFER_MINUTES)
       )
       .map((r) => r.assigned_server!)
       .filter(Boolean)

@@ -2,7 +2,7 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { X, Calendar, Clock, Server as ServerIcon, Key, MapPin, FileText, Pencil, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { MAPS, getStartTimeOptions, getEndTimeOptions, getEndTimeOptionsAdmin, isWeekend, timeToMinutesSince18 } from '@/lib/utils'
+import { MAPS, RESERVATION_BUFFER_MINUTES, getStartTimeOptions, getEndTimeOptions, getEndTimeOptionsAdmin, timeRangesConflict } from '@/lib/utils'
 import type { Reservation, Profile } from '@/types/database'
 import { CustomSelect } from './CustomSelect'
 
@@ -216,16 +216,12 @@ function EditReservationModal({ reservation, allReservations, onClose, onUpdated
   // Serveurs déjà pris sur le créneau sélectionné (exclure la résa en cours d'édition)
   const takenServers = useMemo(() => {
     if (!date || !startTime || !endTime) return new Set<number>()
-    const newStart = timeToMinutesSince18(startTime)
-    const newEnd = timeToMinutesSince18(endTime)
     const taken = new Set<number>()
     for (const r of allReservations) {
       if (r.id === reservation.id) continue
       if (r.date !== date || !r.assigned_server) continue
       if (r.status === 'refused') continue
-      const rStart = timeToMinutesSince18(r.start_time)
-      const rEnd = timeToMinutesSince18(r.end_time)
-      if (rStart < newEnd && rEnd > newStart) {
+      if (timeRangesConflict(startTime, endTime, r.start_time, r.end_time, RESERVATION_BUFFER_MINUTES)) {
         taken.add(r.assigned_server)
       }
     }
