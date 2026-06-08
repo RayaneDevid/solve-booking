@@ -176,6 +176,13 @@ export function formatDateISO(date: Date): string {
   return `${y}-${m}-${d}`
 }
 
+export function formatDateTime(dateTime: string): string {
+  return new Intl.DateTimeFormat('fr-FR', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  }).format(new Date(dateTime))
+}
+
 /**
  * Génère les options d'heure de début (18:00 à 02:00 ou 03:00)
  */

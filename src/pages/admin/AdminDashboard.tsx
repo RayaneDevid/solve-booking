@@ -6,7 +6,7 @@ import { WeeklyCalendar } from '@/components/calendar/WeeklyCalendar'
 import { AcceptModal, RefuseModal } from '@/components/ui/AdminModals'
 import { NewReservationModal } from '@/components/ui/NewReservationModal'
 import { ReservationDetailModal } from '@/components/ui/ReservationDetailModal'
-import { getMonday, getWeekDays, formatDateISO, RESERVATION_BUFFER_MINUTES, timeRangesConflict } from '@/lib/utils'
+import { getMonday, getWeekDays, formatDateISO, formatDateTime, RESERVATION_BUFFER_MINUTES, timeRangesConflict } from '@/lib/utils'
 import { useReservationRealtime } from '@/hooks/useReservationRealtime'
 import type { Reservation, Profile } from '@/types/database'
 
@@ -159,6 +159,9 @@ export function AdminDashboard() {
                     </div>
                     <p className="text-xs text-gray-400 mb-1">
                       {res.date} · {res.start_time.slice(0, 5)} – {res.end_time.slice(0, 5)}
+                    </p>
+                    <p className="text-[11px] text-gray-500 mb-1">
+                      Demandée le {formatDateTime(res.created_at)}
                     </p>
                     {res.requested_map && (
                       <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">

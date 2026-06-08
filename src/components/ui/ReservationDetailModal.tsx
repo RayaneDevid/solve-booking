@@ -2,7 +2,7 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { X, Calendar, Clock, Server as ServerIcon, Key, MapPin, FileText, Pencil, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { MAPS, RESERVATION_BUFFER_MINUTES, getStartTimeOptions, getEndTimeOptions, getEndTimeOptionsAdmin, timeRangesConflict } from '@/lib/utils'
+import { MAPS, RESERVATION_BUFFER_MINUTES, formatDateTime, getStartTimeOptions, getEndTimeOptions, getEndTimeOptionsAdmin, timeRangesConflict } from '@/lib/utils'
 import type { Reservation, Profile } from '@/types/database'
 import { CustomSelect } from './CustomSelect'
 
@@ -81,6 +81,11 @@ export function ReservationDetailModal({ reservation, profiles = {}, onClose, on
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-400">Utilisateur</span>
             <span className="text-sm text-white font-medium">{username}</span>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-400">Demandée le</span>
+            <span className="text-sm text-white">{formatDateTime(reservation.created_at)}</span>
           </div>
 
           {/* Date */}
